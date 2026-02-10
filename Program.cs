@@ -13,7 +13,6 @@ class Program
 {
     static GlobalSystemMediaTransportControlsSessionManager manager;
     static GlobalSystemMediaTransportControlsSession cachedSession;
-    static readonly MemoryStream thumbBuffer = new MemoryStream(512 * 1024);
 
     static string Esc(string s) => s?.Replace("\\", "\\\\").Replace("\"", "\\\"") ?? "";
 
@@ -60,10 +59,9 @@ class Program
                             if (p.Thumbnail != null)
                             {
                                 using var stream = await p.Thumbnail.OpenReadAsync();
-                                thumbBuffer.SetLength(0);
-                                thumbBuffer.Position = 0;
-                                await stream.AsStreamForRead().CopyToAsync(thumbBuffer);
-                                thumb = Convert.ToBase64String(thumbBuffer.GetBuffer(), 0, (int)thumbBuffer.Length);
+                                using var ms = new MemoryStream();
+                                await stream.AsStreamForRead().CopyToAsync(ms);
+                                thumb = Convert.ToBase64String(ms.ToArray());
                             }
                         }
                         catch { }
